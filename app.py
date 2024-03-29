@@ -237,7 +237,7 @@ with image_blocks as demo:
         with gr.Column():
             imgs = gr.ImageMask(sources='upload', type="pil", label='Human. Mask with pen or use auto-masking', interactive=True)
             with gr.Row():
-                is_checked = gr.Checkbox(label="Yes", info="Use auto-generated mask")
+                is_checked = gr.Checkbox(label="Yes", info="Use auto-generated mask",value=True)
             example = gr.Examples(
                 inputs=imgs,
                 examples_per_page=8,
