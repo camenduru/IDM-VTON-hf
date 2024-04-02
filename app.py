@@ -23,7 +23,7 @@ import apply_net
 from preprocess.humanparsing.run_parsing import Parsing
 from preprocess.openpose.run_openpose import OpenPose
 from detectron2.data.detection_utils import convert_PIL_to_numpy,_apply_exif_orientation
-from torchvision.tranfsorms.functional import to_pil_image
+from torchvision.transforms.functional import to_pil_image
 
 
 def pil_to_binary_mask(pil_image, threshold=0):
