@@ -1720,7 +1720,7 @@ class StableDiffusionXLInpaintPipeline(
             )
 
         #project outside for loop
-        image_embeds = unet.encoder_hid_proj(image_embeds).to(prompt_embeds.dtype)
+        image_embeds = self.unet.encoder_hid_proj(image_embeds).to(prompt_embeds.dtype)
 
 
         # 11. Denoising loop
