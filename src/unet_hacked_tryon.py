@@ -1238,7 +1238,7 @@ class UNet2DConditionModel(ModelMixin, ConfigMixin, UNet2DConditionLoadersMixin)
                 )
             image_embeds = added_cond_kwargs.get("image_embeds")
             # print(image_embeds.shape)
-            image_embeds = self.encoder_hid_proj(image_embeds).to(encoder_hidden_states.dtype)
+            # image_embeds = self.encoder_hid_proj(image_embeds).to(encoder_hidden_states.dtype)
             encoder_hidden_states = torch.cat([encoder_hidden_states, image_embeds], dim=1)
 
         # 2. pre-process
