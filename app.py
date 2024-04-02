@@ -23,7 +23,7 @@ import apply_net
 from preprocess.humanparsing.run_parsing import Parsing
 from preprocess.openpose.run_openpose import OpenPose
 from detectron2.data.detection_utils import convert_PIL_to_numpy,_apply_exif_orientation
-
+from torchvision.tranfsorms.functional import to_pil_image
 
 
 def pil_to_binary_mask(pil_image, threshold=0):
@@ -141,6 +141,8 @@ def start_tryon(dict,garm_img,garment_des,is_checked,denoise_steps,seed):
         mask = pil_to_binary_mask(dict['layers'][0].convert("RGB").resize((768, 1024)))
         mask = transforms.ToTensor()(mask)
         mask = mask.unsqueeze(0)
+    mask_gray = (1-transforms.ToTensor()(mask)) * tensor_transfrom(human_img)
+    mask_gray = to_pil_image((mask_gray+1.0)/2.0)
 
 
     human_img_arg = _apply_exif_orientation(human_img.resize((384,512)))
@@ -191,7 +193,9 @@ def start_tryon(dict,garm_img,garment_des,is_checked,denoise_steps,seed):
                             do_classifier_free_guidance=False,
                             negative_prompt=negative_prompt,
                         )
-                        
+
+
+
                     pose_img =  tensor_transfrom(pose_img).unsqueeze(0).to(device,torch.float16)
                     garm_tensor =  tensor_transfrom(garm_img).unsqueeze(0).to(device,torch.float16)
                     generator = torch.Generator(device).manual_seed(seed) if seed is not None else None
@@ -213,7 +217,7 @@ def start_tryon(dict,garm_img,garment_des,is_checked,denoise_steps,seed):
                         ip_adapter_image = garm_img.resize((768,1024)),
                         guidance_scale=2.0,
                     )[0]
-    return images[0]
+    return images[0], mask_gray
 
 garm_list = os.listdir(os.path.join(example_path,"cloth"))
 garm_list_path = [os.path.join(example_path,"cloth",garm) for garm in garm_list]
@@ -255,7 +259,13 @@ with image_blocks as demo:
                 examples=garm_list_path)
         with gr.Column():
             # image_out = gr.Image(label="Output", elem_id="output-img", height=400)
+            masked_img = gr.Image(label="Masked image output", elem_id="masked-img",show_share_button=False)
+        with gr.Column():
+            # image_out = gr.Image(label="Output", elem_id="output-img", height=400)
             image_out = gr.Image(label="Output", elem_id="output-img",show_share_button=False)
+
+
+
 
     with gr.Column():
         try_button = gr.Button(value="Try-on")
@@ -265,7 +275,7 @@ with image_blocks as demo:
                 seed = gr.Number(label="Seed", minimum=-1, maximum=2147483647, step=1, value=42)
 
 
-    try_button.click(fn=start_tryon, inputs=[imgs, garm_img, prompt, is_checked, denoise_steps, seed], outputs=[image_out], api_name='tryon')
+    try_button.click(fn=start_tryon, inputs=[imgs, garm_img, prompt, is_checked, denoise_steps, seed], outputs=[image_out,masked_img], api_name='tryon')
 
             
 

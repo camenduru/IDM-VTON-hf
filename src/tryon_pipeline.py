@@ -480,35 +480,29 @@ class StableDiffusionXLInpaintPipeline(
 
     # Copied from diffusers.pipelines.stable_diffusion.pipeline_stable_diffusion.StableDiffusionPipeline.prepare_ip_adapter_image_embeds
     def prepare_ip_adapter_image_embeds(self, ip_adapter_image, device, num_images_per_prompt):
-        if not isinstance(ip_adapter_image, list):
-            ip_adapter_image = [ip_adapter_image]
+        # if not isinstance(ip_adapter_image, list):
+        #     ip_adapter_image = [ip_adapter_image]
 
         # if len(ip_adapter_image) != len(self.unet.encoder_hid_proj.image_projection_layers):
         #     raise ValueError(
         #         f"`ip_adapter_image` must have same length as the number of IP Adapters. Got {len(ip_adapter_image)} images and {len(self.unet.encoder_hid_proj.image_projection_layers)} IP Adapters."
         #     )
+        output_hidden_state = not isinstance(self.unet.encoder_hid_proj, ImageProjection)
+        # print(output_hidden_state)
+        image_embeds, negative_image_embeds = self.encode_image(
+            ip_adapter_image, device, 1, output_hidden_state
+        )
+        # print(single_image_embeds.shape)
+        # single_image_embeds = torch.stack([single_image_embeds] * num_images_per_prompt, dim=0)
+        # single_negative_image_embeds = torch.stack([single_negative_image_embeds] * num_images_per_prompt, dim=0)
+        # print(single_image_embeds.shape)
+        if self.do_classifier_free_guidance:
+            image_embeds = torch.cat([negative_image_embeds, image_embeds])
+            image_embeds = image_embeds.to(device)
 
-        image_embeds = []
-        # print(ip_adapter_image.shape)
-        for single_ip_adapter_image in ip_adapter_image:
-            # print(single_ip_adapter_image.shape)
-            # ip_adapter_image, self.unet.encoder_hid_proj.image_projection_layers
-            output_hidden_state = not isinstance(self.unet.encoder_hid_proj, ImageProjection)
-            # print(output_hidden_state)
-            single_image_embeds, single_negative_image_embeds = self.encode_image(
-                single_ip_adapter_image, device, 1, output_hidden_state
-            )
-            # print(single_image_embeds.shape)
-            # single_image_embeds = torch.stack([single_image_embeds] * num_images_per_prompt, dim=0)
-            # single_negative_image_embeds = torch.stack([single_negative_image_embeds] * num_images_per_prompt, dim=0)
-            # print(single_image_embeds.shape)
-            if self.do_classifier_free_guidance:
-                single_image_embeds = torch.cat([single_negative_image_embeds, single_image_embeds])
-                single_image_embeds = single_image_embeds.to(device)
-
-            image_embeds.append(single_image_embeds)
 
         return image_embeds
+
 
     # Copied from diffusers.pipelines.stable_diffusion_xl.pipeline_stable_diffusion_xl.StableDiffusionXLPipeline.encode_prompt
     def encode_prompt(
@@ -1724,8 +1718,10 @@ class StableDiffusionXLInpaintPipeline(
             image_embeds = self.prepare_ip_adapter_image_embeds(
                 ip_adapter_image, device, batch_size * num_images_per_prompt
             )
-            # print("a")
-            # print(image_embeds[0].shape)
+
+        #project outside for loop
+        image_embeds = unet.encoder_hid_proj(image_embeds).to(prompt_embeds.dtype)
+
 
         # 11. Denoising loop
         num_warmup_steps = max(len(timesteps) - num_inference_steps * self.scheduler.order, 0)
@@ -1759,6 +1755,8 @@ class StableDiffusionXLInpaintPipeline(
                 guidance_scale_tensor, embedding_dim=self.unet.config.time_cond_proj_dim
             ).to(device=device, dtype=latents.dtype)
 
+
+
         self._num_timesteps = len(timesteps)
         with self.progress_bar(total=num_inference_steps) as progress_bar:
             for i, t in enumerate(timesteps):
@@ -1781,7 +1779,7 @@ class StableDiffusionXLInpaintPipeline(
                 # predict the noise residual
                 added_cond_kwargs = {"text_embeds": add_text_embeds, "time_ids": add_time_ids}
                 if ip_adapter_image is not None:
-                    added_cond_kwargs["image_embeds"] = image_embeds[0]
+                    added_cond_kwargs["image_embeds"] = image_embeds
                 # down,reference_features = self.UNet_Encoder(cloth,t, text_embeds_cloth,added_cond_kwargs= {"text_embeds": pooled_prompt_embeds_c, "time_ids": add_time_ids},return_dict=False)
                 down,reference_features = self.unet_encoder(cloth,t, text_embeds_cloth,return_dict=False)
                 # print(type(reference_features))
