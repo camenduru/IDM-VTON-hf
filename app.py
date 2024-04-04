@@ -139,8 +139,8 @@ def start_tryon(dict,garm_img,garment_des,is_checked,denoise_steps,seed):
         mask = mask.resize((768,1024))
     else:
         mask = pil_to_binary_mask(dict['layers'][0].convert("RGB").resize((768, 1024)))
-        mask = transforms.ToTensor()(mask)
-        mask = mask.unsqueeze(0)
+        # mask = transforms.ToTensor()(mask)
+        # mask = mask.unsqueeze(0)
     mask_gray = (1-transforms.ToTensor()(mask)) * tensor_transfrom(human_img)
     mask_gray = to_pil_image((mask_gray+1.0)/2.0)
 
