@@ -239,12 +239,12 @@ image_blocks = gr.Blocks().queue()
 with image_blocks as demo:
     with gr.Row():
         with gr.Column():
-            imgs = gr.ImageMask(sources='upload', type="pil", label='Human. Mask with pen or use auto-masking', interactive=True)
+            imgs = gr.ImageEditor(sources='upload', type="pil", label='Human. Mask with pen or use auto-masking', interactive=True)
             with gr.Row():
-                is_checked = gr.Checkbox(label="Yes", info="Use auto-generated mask",value=True)
+                is_checked = gr.Checkbox(label="Yes", info="Use auto-generated mask (Takes 5 more seconds)",value=True)
             example = gr.Examples(
                 inputs=imgs,
-                examples_per_page=8,
+                examples_per_page=10,
                 examples=human_ex_list
             )
 
@@ -255,7 +255,7 @@ with image_blocks as demo:
                     prompt = gr.Textbox(placeholder="Description of garment ex) Short Sleeve Round Neck T-shirts", show_label=False, elem_id="prompt")
             example = gr.Examples(
                 inputs=garm_img,
-                examples_per_page=8,
+                examples_per_page=10,
                 examples=garm_list_path)
         with gr.Column():
             # image_out = gr.Image(label="Output", elem_id="output-img", height=400)
