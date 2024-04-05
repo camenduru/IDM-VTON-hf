@@ -1,6 +1,6 @@
 ---
 title: IDM VTON
-emoji: 🦀
+emoji: 👕👔👚
 colorFrom: yellow
 colorTo: red
 sdk: gradio
