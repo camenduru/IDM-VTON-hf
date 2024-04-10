@@ -130,7 +130,7 @@ def start_tryon(dict,garm_img,garment_des,is_checked,is_checked_crop,denoise_ste
     pipe.unet_encoder.to(device)
 
     garm_img= garm_img.convert("RGB").resize((768,1024))
-    human_img_orig = dict["background"].resize((768,1024)).convert("RGB")    
+    human_img_orig = dict["background"].convert("RGB")    
     
     if is_checked_crop:
         width, height = human_img_orig.size
