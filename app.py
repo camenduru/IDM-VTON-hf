@@ -257,6 +257,10 @@ for ex_human in human_list_path:
 
 ##default human
 
+_description = """\
+Virtual Try-on with human image and garment image. Check out the model [here](https://huggingface.co/yisol/IDM-VTON) and the source code [here](https://github.com/yisol/IDM-VTON).
+"""
+
 image_blocks = gr.Blocks().queue()
 with image_blocks as demo:
     with gr.Row():
